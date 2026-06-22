@@ -1,5 +1,8 @@
 # Frank Workflow
 
+[![ci](https://github.com/bigbigmonkey123/frank-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/bigbigmonkey123/frank-workflow/actions/workflows/ci.yml)
+[![release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/bigbigmonkey123/frank-workflow/releases/tag/v0.1.0)
+
 Frank Workflow is a bridge-protocol-driven, multi-agent development workflow. It provides a Codex-oriented developer adapter, a Claude review adapter, and an optional Gemini/smux scout adapter, while keeping team- or user-specific behavior in overlays.
 
 ## Why
@@ -11,7 +14,7 @@ Frank Workflow is a bridge-protocol-driven, multi-agent development workflow. It
 ## Quick Start
 
 ```bash
-git clone https://github.com/<org>/frank-workflow
+git clone https://github.com/bigbigmonkey123/frank-workflow
 cd frank-workflow
 ./scripts/install.sh --dry-run
 ./scripts/check-env.sh
