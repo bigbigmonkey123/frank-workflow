@@ -20,8 +20,9 @@ Optional:
 | Gemini CLI or compatible scout | Scout role. |
 | `gitleaks` | Local secret scan before publishing. |
 | `shellcheck` | Shell linting. |
+| MCP servers | Optional tool/context providers configured in your AI CLI environment. |
 
-Install these outside this repository. Do not copy CLI caches, plugin caches, browser profiles, auth stores, or private overlays into Git.
+Install these outside this repository. Do not copy CLI caches, plugin caches, MCP server source/config, browser profiles, auth stores, or private overlays into Git.
 
 ## 2. Check environment
 
@@ -50,7 +51,20 @@ CODEX_BRIDGE_DRY_RUN=1 bridges/codex/codex-bridge status
 GEMINI_BRIDGE_DRY_RUN=1 bridges/gemini/gemini-bridge status
 ```
 
-## 4. Keep private overlays external
+
+## 4. Configure MCP services outside the repo
+
+If your workflow needs MCP services, configure them in your AI CLI environment or private overlay, not in Frank Workflow itself. Keep server source, credentials, endpoint URLs, and generated config files outside this public repository.
+
+Example note to put in a private overlay or a private project README:
+
+```text
+Required local tools:
+- MCP service: <server-name>, version <version>, configured in the user's AI CLI.
+- Required environment variables: <document names only; do not commit values>.
+```
+
+## 5. Keep private overlays external
 
 Private team rules belong outside this repository, for example:
 
@@ -60,7 +74,7 @@ export FRANK_WORKFLOW_OVERLAY_DIR="$HOME/.frank-workflow/overlays/default"
 
 Local overlays should contain only your own private policy, persona, memory settings, and runtime paths. Never commit those files to the public core.
 
-## 5. Pre-publish safety checks
+## 6. Pre-publish safety checks
 
 Before publishing a derived workflow or example, run:
 

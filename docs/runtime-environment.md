@@ -10,6 +10,7 @@ Frank Workflow is a framework and protocol package. It must not vendor or embed 
 | Bridge protocol and dry-run adapters | Yes | No |
 | Live Claude/Codex/Gemini CLIs | No | Yes |
 | Codex/Claude plugins and skills | No | Yes |
+| MCP server implementations and configs | No | Yes |
 | tmux/smux helpers | No | Yes |
 | API keys, OAuth, browser profiles, memories | Never | User-controlled only |
 
@@ -41,7 +42,7 @@ Install these outside the repo when you want live multi-agent operation or stron
 
 ## Install Model
 
-`./scripts/install.sh` installs framework templates and example config into `$FRANK_WORKFLOW_HOME` only. It does not install AI CLIs, plugins, skills, credentials, or private overlays.
+`./scripts/install.sh` installs framework templates and example config into `$FRANK_WORKFLOW_HOME` only. It does not install AI CLIs, plugins, skills, MCP servers, credentials, or private overlays.
 
 Use `./scripts/check-env.sh --live` to verify optional live adapters are present. Without `--live`, the command checks only the minimum framework requirements.
 
@@ -62,11 +63,12 @@ export CODEX_BRIDGE_BIN="$HOME/.local/bin/codex-bridge"
 export GEMINI_BRIDGE_BIN="$HOME/.local/bin/gemini-bridge"
 ```
 
-## Plugin Policy
+## Plugin and MCP Policy
 
-Plugins are environment requirements, not repository content:
+Plugins and MCP services are environment requirements, not repository content:
 
 - Keep plugin installation in the user's Codex/Claude/Gemini environment.
-- Document plugin names and minimum versions when a workflow needs them.
-- Do not copy plugin source, plugin cache, browser profiles, auth stores, or generated runtime state into this repo.
-- CI must pass without live plugins by using dry-run adapters.
+- Keep MCP server installation and MCP configuration in the user's AI CLI environment or private overlay.
+- Document plugin or MCP server names and minimum versions when a workflow needs them.
+- Do not copy plugin source, plugin cache, MCP server source, MCP config files, browser profiles, auth stores, or generated runtime state into this repo.
+- CI must pass without live plugins or MCP services by using dry-run adapters.

@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.1.2] - 2026-06-22
+
+### Changed
+- Clarified that MCP services are external environment requirements and must not be vendored into the public repository.
+
 ## [v0.1.1] - 2026-06-22
 
 ### Added

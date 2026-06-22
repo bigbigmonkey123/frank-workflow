@@ -44,7 +44,7 @@ Codex is an adapter, not a hard dependency. Any CLI can implement the bridge pro
 
 ## Runtime Tools
 
-This repo does not vendor Claude/Codex/Gemini CLIs, Codex plugins, smux/tmux helpers, credentials, browser profiles, or private overlays. Install those in the user environment and verify them with `./scripts/check-env.sh --live`. The default tests use dry-run adapters and require only `bash`, `git`, and `python3`. See `docs/runtime-environment.md`.
+This repo does not vendor Claude/Codex/Gemini CLIs, Codex plugins, MCP services, smux/tmux helpers, credentials, browser profiles, or private overlays. Install those in the user environment and verify them with `./scripts/check-env.sh --live`. The default tests use dry-run adapters and require only `bash`, `git`, and `python3`. See `docs/runtime-environment.md`.
 
 ## Codex Bootstrap
 
