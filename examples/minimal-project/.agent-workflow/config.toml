@@ -1,0 +1,3 @@
+[overlay]
+enabled = true
+project = ".agent-workflow/project.md"

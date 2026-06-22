@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cmd="${1:-}"
+shift || true
+if [[ "${CLAUDE_BRIDGE_DRY_RUN:-0}" == "1" ]]; then
+  case "$cmd" in
+    send)
+      echo "Task sent: task_id=dryrun-0001"
+      ;;
+    wait)
+      cat <<'OUT'
+VERDICT: APPROVED_WITH_RISKS
+FINDINGS:
+- [dry-run] bridge protocol reachable
+RECOMMENDATIONS:
+- configure a real reviewer adapter for live review
+EVIDENCE:
+- dry-run fixture
+OUT
+      ;;
+    status) echo "claude bridge dry-run ok" ;;
+    *) echo "error: unsupported dry-run command: $cmd" >&2; exit 1 ;;
+  esac
+  exit 0
+fi
+echo "error: live Claude bridge is not bundled in v0.1; use CLAUDE_BRIDGE_DRY_RUN=1 or install a compatible adapter" >&2
+exit 124

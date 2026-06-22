@@ -1,0 +1,29 @@
+# local overlays and secrets
+.frank-workflow/local.md
+.frank-workflow/secrets.env
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# bridge/runtime scratch
+.claude-bridge/
+.codex-shared/
+.codex-agent-shared/
+.gemini-shared/
+tmp/
+*.log
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# build/cache
+node_modules/
+.cache/
+.pytest_cache/
+__pycache__/
+*.pyc

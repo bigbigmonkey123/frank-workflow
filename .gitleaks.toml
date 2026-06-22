@@ -1,0 +1,33 @@
+title = "frank-workflow public denylist"
+
+[[allowlists]]
+description = "allow scanner rule files to contain denylist regexes"
+paths = [
+  '''^\.gitleaks\.toml$''',
+  '''^scripts/secret-scan\.sh$''',
+  '''^\.claude-bridge/''',
+  '''^\.git/'''
+]
+
+[[allowlists]]
+description = "allow RFC 5737 documentation IP ranges"
+regexes = [
+  '''192\.0\.2\.\d{1,3}''',
+  '''198\.51\.100\.\d{1,3}''',
+  '''203\.0\.113\.\d{1,3}'''
+]
+
+[[rules]]
+id = "absolute-user-path"
+description = "Absolute user-home paths must not appear in public core"
+regex = '''(/Users/[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+|C:\\Users\\[A-Za-z0-9._-]+)'''
+
+[[rules]]
+id = "raw-ip-address"
+description = "Raw IP addresses should be documentation ranges or placeholders"
+regex = '''\b(?:\d{1,3}\.){3}\d{1,3}\b'''
+
+[[rules]]
+id = "inline-secret-assignment"
+description = "Inline secret assignments should not appear in public core"
+regex = '''(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*[^\s]{8,}'''

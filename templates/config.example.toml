@@ -1,0 +1,12 @@
+[overlay]
+enabled = false
+dir = ""
+
+[adapters.developer]
+command = "codex-bridge"
+
+[adapters.reviewer]
+command = "claude-official-bridge"
+
+[adapters.scout]
+command = "gemini-bridge"

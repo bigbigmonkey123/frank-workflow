@@ -1,0 +1,2 @@
+- Replace this file with your team's tone, terminology, and response style.
+- Keep correctness, safety, and verification above style.

@@ -1,0 +1,14 @@
+# Default maintainers for Frank Workflow.
+# Replace or extend with team handles as the project grows.
+
+* @your-team
+
+# Review-sensitive areas
+/bridges/ @your-team
+/scripts/ @your-team
+/templates/ @your-team
+/docs/bridge-protocol.md @your-team
+/docs/workflow.md @your-team
+/.github/workflows/ @your-team
+/.gitleaks.toml @your-team
+/SECURITY.md @your-team
