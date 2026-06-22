@@ -16,6 +16,8 @@ Reusable bridge-protocol-driven workflow core for multi-agent software developme
 | Workflow gates | `docs/workflow.md` |
 | Bridge protocol | `docs/bridge-protocol.md` |
 | Runtime environment | `docs/runtime-environment.md` |
+| Live adapter setup | `docs/quickstart-live-adapters.md` |
+| Codex bootstrap | `docs/codex-bootstrap.md` |
 | Custom overlays | `docs/customization.md` |
 | Memory model | `docs/memory-model.md` |
 | Release safety | `docs/public-release-checklist.md` |

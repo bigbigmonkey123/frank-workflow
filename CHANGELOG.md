@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.1.1] - 2026-06-22
+
+### Added
+- One-command bootstrap script for installing templates, initializing target projects, generating AGENTS/CLAUDE files, and running dry-run adapter smoke tests.
+- Codex bootstrap guide for fast setup in downstream projects.
+- Live adapter quick-start documentation for external Claude/Codex/Gemini tool setup.
+
+### Changed
+- CODEOWNERS now points at the repository owner instead of placeholder team handles.
+
 ## [v0.1.0] - 2026-06-22
 
 ### Added

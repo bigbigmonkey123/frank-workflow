@@ -1,7 +1,7 @@
 # Frank Workflow
 
 [![ci](https://github.com/bigbigmonkey123/frank-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/bigbigmonkey123/frank-workflow/actions/workflows/ci.yml)
-[![release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/bigbigmonkey123/frank-workflow/releases/tag/v0.1.0)
+[![release](https://img.shields.io/badge/release-v0.1.1-blue)](https://github.com/bigbigmonkey123/frank-workflow/releases/tag/v0.1.1)
 
 Frank Workflow is a bridge-protocol-driven, multi-agent development workflow. It provides a Codex-oriented developer adapter, a Claude review adapter, and an optional Gemini/smux scout adapter, while keeping team- or user-specific behavior in overlays.
 
@@ -16,10 +16,8 @@ Frank Workflow is a bridge-protocol-driven, multi-agent development workflow. It
 ```bash
 git clone https://github.com/bigbigmonkey123/frank-workflow
 cd frank-workflow
-./scripts/install.sh --dry-run
-./scripts/check-env.sh
-CLAUDE_BRIDGE_DRY_RUN=1 bridges/claude/claude-official-bridge send templates/review-request.md
-CLAUDE_BRIDGE_DRY_RUN=1 bridges/claude/claude-official-bridge wait dryrun-0001 5
+./scripts/bootstrap.sh --project /tmp/frank-workflow-demo --name demo --dry-run
+./scripts/bootstrap.sh --project /tmp/frank-workflow-demo --name demo
 ```
 
 Expected dry-run output includes a deterministic task id and a sample verdict.
@@ -47,6 +45,14 @@ Codex is an adapter, not a hard dependency. Any CLI can implement the bridge pro
 ## Runtime Tools
 
 This repo does not vendor Claude/Codex/Gemini CLIs, Codex plugins, smux/tmux helpers, credentials, browser profiles, or private overlays. Install those in the user environment and verify them with `./scripts/check-env.sh --live`. The default tests use dry-run adapters and require only `bash`, `git`, and `python3`. See `docs/runtime-environment.md`.
+
+## Codex Bootstrap
+
+To let Codex initialize a target project quickly, point it at this repository and ask it to run `scripts/bootstrap.sh --project "$PWD" --name "$(basename "$PWD")"`. See `docs/codex-bootstrap.md`.
+
+## Live Adapter Setup
+
+The default quick start uses dry-run adapters. For real Claude/Codex/Gemini execution, install those CLIs in your own environment and point Frank Workflow at them with environment variables. See `docs/quickstart-live-adapters.md`.
 
 ## Private Overlays
 
