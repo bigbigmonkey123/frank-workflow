@@ -15,6 +15,8 @@ Reusable bridge-protocol-driven workflow core for multi-agent software developme
 |---|---|
 | Workflow gates | `docs/workflow.md` |
 | Bridge protocol | `docs/bridge-protocol.md` |
+| Capacity and safe retry | `docs/capacity-resilience.md` |
+| v0.2 migration | `docs/migration-v0.2.md` |
 | Runtime environment | `docs/runtime-environment.md` |
 | Live adapter setup | `docs/quickstart-live-adapters.md` |
 | Codex bootstrap | `docs/codex-bootstrap.md` |
@@ -31,7 +33,8 @@ Reusable bridge-protocol-driven workflow core for multi-agent software developme
 | Run tests | `./tests/run.sh` |
 | Secret scan | `./scripts/secret-scan.sh` |
 | Docs lint | `./scripts/docs-lint.sh` |
+| Capacity tests | `./tests/capacity-guard-test.sh` |
 
 ## Update Triggers
 
-Update docs and tests when bridge protocol, overlay lifecycle, release checks, templates, or adapter behavior changes.
+Update docs and tests when bridge protocol, capacity/replay behavior, overlay lifecycle, release checks, templates, or adapter behavior changes. Any tracked change invalidates the prior review of that scope.

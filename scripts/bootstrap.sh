@@ -61,6 +61,10 @@ TARGET_PROJECT="$(resolve_target_project "$TARGET_PROJECT")"
 say() { printf '%s\n' "$*"; }
 write_file() {
   local path="$1" content="$2"
+  if [[ -e "$path" && "$FORCE" != "1" ]]; then
+    say "skip existing: $path"
+    return 0
+  fi
   if [[ "$DRY_RUN" == "1" ]]; then
     say "dry-run: write $path"
   else
@@ -126,7 +130,14 @@ copy_if_needed "$ROOT/templates/post-dev-review.md" "$TARGET_PROJECT/.frank-work
 copy_if_needed "$ROOT/templates/qa-report.md" "$TARGET_PROJECT/.frank-workflow/qa-report.md"
 
 if [[ "$DRY_RUN" != "1" ]]; then
-  CLAUDE_BRIDGE_DRY_RUN=1 "$ROOT/bridges/claude/claude-official-bridge" send "$ROOT/templates/review-request.md" >/dev/null
+  smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/frank-workflow-smoke.XXXXXX")"
+  trap 'rm -rf "$smoke_root"' EXIT
+  send_output="$(CLAUDE_BRIDGE_DRY_RUN=1 FRANK_BRIDGE_ARTIFACT_ROOT="$smoke_root/artifacts" "$ROOT/bridges/claude/claude-official-bridge" send "$ROOT/templates/review-request.md")"
+  smoke_task_id="$(printf '%s\n' "$send_output" | sed -n 's/^Task sent: task_id=//p')"
+  [[ -n "$smoke_task_id" ]] || { echo "error: reviewer smoke did not return task id" >&2; exit 1; }
+  CLAUDE_BRIDGE_DRY_RUN=1 FRANK_BRIDGE_ARTIFACT_ROOT="$smoke_root/artifacts" "$ROOT/bridges/claude/claude-official-bridge" wait "$smoke_task_id" 0 >/dev/null
+  rm -rf "$smoke_root"
+  trap - EXIT
   CODEX_BRIDGE_DRY_RUN=1 "$ROOT/bridges/codex/codex-bridge" status >/dev/null
   GEMINI_BRIDGE_DRY_RUN=1 "$ROOT/bridges/gemini/gemini-bridge" status >/dev/null
 fi

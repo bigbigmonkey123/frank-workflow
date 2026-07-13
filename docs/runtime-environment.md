@@ -63,6 +63,14 @@ export CODEX_BRIDGE_BIN="$HOME/.local/bin/codex-bridge"
 export GEMINI_BRIDGE_BIN="$HOME/.local/bin/gemini-bridge"
 ```
 
+The public wrappers delegate to these explicit binaries when dry-run mode is disabled. Avoid pointing an override back to the wrapper itself.
+
+## Runtime Artifacts and Capacity
+
+Reviewer dry-run artifacts default to `.claude-bridge/`; the generic capacity ledger defaults to `.frank-capacity-guard/`. Both are gitignored. Prompt-bearing runtime artifacts are user-controlled sensitive data, not source files.
+
+Capacity fallback binaries and provider classifiers are configured only through the user environment. The public repository contains no provider account, private model ladder, or credential.
+
 ## Plugin and MCP Policy
 
 Plugins and MCP services are environment requirements, not repository content:

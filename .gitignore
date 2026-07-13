@@ -13,6 +13,7 @@
 .codex-shared/
 .codex-agent-shared/
 .gemini-shared/
+.frank-capacity-guard/
 tmp/
 *.log
 

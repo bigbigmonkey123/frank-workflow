@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.2.0] - 2026-07-12
+
+### Added
+- Unique reviewer dry-run task ids with request, response, session, and metadata artifacts.
+- Dry-run wait, read, status, cleanup, start, and stop lifecycle behavior.
+- Vendor-neutral fail-closed capacity guard with exit `74`/`75` semantics and replay-safety tests.
+- Continuous-execution, hard-stop, review-invalidation, and v0.1 migration documentation.
+- `VERSION` as the release-version source.
+
+### Changed
+- Reviewer dry-run consumers must parse `task_id=` instead of assuming `dryrun-0001`.
+- Bootstrap now verifies reviewer send/wait and preserves existing generated config unless `--force` is supplied.
+- Explicit live adapter environment overrides delegate to external binaries.
+
+### Fixed
+- README release badge drift.
+
+### Security
+- Unknown replay safety always fails closed with exit `74`; partial or unknown execution is never blindly replayed.
+- Artifact roots are gitignored and task directories use user-only permissions where supported.
+
 ## [v0.1.2] - 2026-06-22
 
 ### Changed

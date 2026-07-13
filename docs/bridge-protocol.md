@@ -1,16 +1,43 @@
-# Bridge Protocol
+# Bridge Protocol v0.2
+
+The protocol is vendor-neutral. Claude, Codex, and Gemini are adapters; live clients remain external to this repository.
 
 ## Lifecycle
 
 ```text
 bridge start
-bridge send <prompt-or-file>
+bridge send <prompt-or-file>        # prints Task sent: task_id=<id>
 bridge wait <task-id> [timeout]
-bridge read [task-id|lines]
-bridge status
+bridge read <task-id>
+bridge status                       # must not create artifacts
 bridge stop
-bridge cleanup
+bridge cleanup <task-id|--all>
 ```
+
+The Claude dry-run adapter is the v0.2 reference implementation. `start` and `stop` are no-op successes in dry-run. Codex and Gemini lifecycle parity is planned for v0.2.1; their v0.2 dry-run `status` compatibility remains intact.
+
+## Task and Artifact Contract
+
+Default task ids use `YYYYMMDDTHHMMSSZ-<pid>-<8 hex>` with entropy from `/dev/urandom`. Tests may set `FRANK_BRIDGE_DRY_RUN_TASK_ID`; reusing an existing id fails with exit `1` and never overwrites artifacts.
+
+The reviewer reference adapter writes:
+
+```text
+.claude-bridge/<task-id>/
+  request.md
+  session.env
+  response.md
+  metadata.json
+```
+
+- Task directories and files are user-only where the platform permits.
+- `response.md` and `metadata.json` are written to temporary files in the same directory and committed with same-filesystem `mv`.
+- `wait` succeeds only when `response.md` contains a valid verdict.
+- `response.md` is the completion source of truth. A crash after committing it but before the final metadata update can leave `metadata.json` at `pending`; readers must not treat that stale status as an incomplete response.
+- `request.md` can contain sensitive prompt text. Artifact roots are ignored by Git but are not a secret store; run `cleanup` when retention is unnecessary. `cleanup --all` removes only tasks marked `MODE=dry-run` and leaves external live-adapter tasks untouched.
+- `status` is read-only.
+
+Live adapters should archive equivalent evidence even if their runtime root differs.
 
 ## Verdict Contract
 
@@ -21,13 +48,33 @@ RECOMMENDATIONS:
 EVIDENCE:
 ```
 
+Any blocking finding means `REVISE`. An approval is valid only for the reviewed tree or declared diff. A tracked change in reviewed scope invalidates the prior approval and requires re-review.
+
 ## Exit Codes
 
-| Exit code | Meaning |
-|---:|---|
-| 0 | Success. |
-| 1 | General error. |
-| 2 | Timeout. |
-| 124 | Required bridge/client binary not found. |
+| Exit | Meaning | Workflow action |
+|---:|---|---|
+| `0` | Success | Continue. |
+| `1` | Invalid arguments, unknown task, invalid artifact, or general failure | Fix locally; do not ask by default. |
+| `2` | Wait timeout | Diagnose and retry within the infrastructure budget. |
+| `74` | Partial execution or unknown replay safety | Do not replay. Reconcile state and report to the human before another attempt. |
+| `75` | Capacity exhausted with replay safety proven `none` | Back off or use another known-safe fallback; not a user approval gate. |
+| `124` | Required external client missing | Repair environment or select another compatible adapter. |
 
-`send` prints a task id on success. `wait` returns `2` on timeout. `status` must not create side effects.
+Exit `74` is an infrastructure code, not a human approval choice. Its partial/unknown execution state is nevertheless a workflow hard stop because another attempt could duplicate side effects.
+
+## Concurrency
+
+Each `send` owns one unique task directory. Dry-run adapters use no global mutable current-task pointer. A deterministic test id collision fails closed. Live adapters may use workspace locks, but independent tasks must retain distinct ids and artifacts.
+
+## Capacity Contract
+
+Capacity and overload are transient infrastructure states, not task failures or user gates. The optional `bridges/lib/capacity-guard` follows these rules:
+
+1. Exit `0` always wins, even if normal output mentions capacity.
+2. Non-capacity failures keep the child exit code and are never retried.
+3. Replay requires a structured probe returning `none` or `FRANK_CAPACITY_IDEMPOTENT=1`.
+4. A probe reporting `present` or `unknown` returns `74`; with no probe or explicit idempotent declaration, any capacity failure returns `74` without replay.
+5. Known-safe exhausted fallbacks return `75`.
+
+Default classification is deliberately fail-closed and matches exact capacity-style stderr lines. Providers with structured errors should supply `FRANK_CAPACITY_CLASSIFIER` rather than broadening the public default.

@@ -20,4 +20,8 @@ for f in \
 done
 grep -q 'demo-project' "$PROJECT/.frank-workflow/project.md"
 grep -q 'Read AGENTS.md first' "$PROJECT/CLAUDE.md"
+
+printf 'preserve = true\n' >"$PROJECT/.frank-workflow/config.toml"
+FRANK_WORKFLOW_HOME="$HOME_DIR/.frank-workflow" scripts/bootstrap.sh --project "$PROJECT" --name demo-project >/dev/null
+grep -q 'preserve = true' "$PROJECT/.frank-workflow/config.toml"
 echo "bootstrap test passed"

@@ -1,1 +1,1 @@
-Review the proposed change. Check scope, risks, tests, docs impact, and rollback posture. Return VERDICT, FINDINGS, RECOMMENDATIONS, and EVIDENCE.
+Review the proposed change against the supplied tree/diff reference. Check scope, risks, tests, docs impact, compatibility, and rollback posture. Any blocking finding requires REVISE. Return VERDICT, FINDINGS, RECOMMENDATIONS, and EVIDENCE, and name the review basis.

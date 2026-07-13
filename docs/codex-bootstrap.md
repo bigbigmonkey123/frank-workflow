@@ -14,10 +14,12 @@ This command:
 
 1. Checks required tools (`bash`, `git`, `python3`).
 2. Installs framework templates under `$FRANK_WORKFLOW_HOME` or `$HOME/.frank-workflow`.
-3. Creates project-local `.frank-workflow/config.toml` and `.frank-workflow/project.md`.
+3. Creates project-local `.frank-workflow/config.toml` and `.frank-workflow/project.md` when absent.
 4. Generates `AGENTS.md` with the neutral persona template when absent.
 5. Copies `CLAUDE.md`, review request, post-dev review, and QA templates.
-6. Runs dry-run Claude/Codex/Gemini adapter smoke tests.
+6. Runs a reviewer dry-run `send`/`wait` lifecycle plus Codex/Gemini status smoke tests.
+
+Existing generated files are preserved unless `--force` is supplied. Back up and diff customized files before force mode; it overwrites rather than merging. See `docs/migration-v0.2.md`.
 
 ## Codex prompt to initialize a project
 
@@ -44,6 +46,8 @@ export CLAUDE_BRIDGE_BIN="$HOME/.local/bin/claude-official-bridge"
 export CODEX_BRIDGE_BIN="$HOME/.local/bin/codex-bridge"
 export GEMINI_BRIDGE_BIN="$HOME/.local/bin/gemini-bridge"
 ```
+
+The v0.2 reviewer dry-run returns a unique task id and stores gitignored artifacts. Parse `task_id=` from `send`; do not hardcode a fixture id.
 
 ## Safety
 

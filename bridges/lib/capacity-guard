@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Vendor-neutral transient-capacity wrapper. Fallback entries are executable
+# paths separated by ':'. Each receives the primary command's original args.
+
+ARTIFACT_ROOT="${FRANK_CAPACITY_ARTIFACT_ROOT:-$PWD/.frank-capacity-guard}"
+FALLBACK_BINS="${FRANK_CAPACITY_FALLBACK_BINS:-}"
+BACKOFF="${FRANK_CAPACITY_BACKOFF_SECONDS:-0}"
+CLASSIFIER="${FRANK_CAPACITY_CLASSIFIER:-}"
+SIDE_EFFECT_PROBE="${FRANK_SIDE_EFFECT_PROBE:-}"
+IDEMPOTENT="${FRANK_CAPACITY_IDEMPOTENT:-0}"
+
+usage() {
+  cat <<'USAGE'
+Usage: capacity-guard -- COMMAND [ARGS...]
+
+Environment:
+  FRANK_CAPACITY_FALLBACK_BINS   ':'-separated fallback executables.
+  FRANK_CAPACITY_CLASSIFIER      Optional executable: stdout-file stderr-file.
+  FRANK_SIDE_EFFECT_PROBE        Optional executable: stdout-file stderr-file;
+                                  prints none, present, or unknown.
+  FRANK_CAPACITY_IDEMPOTENT      Set 1 to explicitly allow safe replay.
+  FRANK_CAPACITY_BACKOFF_SECONDS Integer delay between attempts.
+
+Exit 74: partial execution or unknown replay safety; no replay performed.
+Exit 75: capacity exhausted with replay safety proven none.
+USAGE
+}
+
+[[ "${1:-}" == "--" ]] || { usage >&2; exit 2; }
+shift
+[[ $# -gt 0 ]] || { usage >&2; exit 2; }
+[[ "$BACKOFF" =~ ^[0-9]+$ ]] || { echo "error: backoff must be a non-negative integer" >&2; exit 2; }
+case "$IDEMPOTENT" in 0|1) ;; *) echo "error: FRANK_CAPACITY_IDEMPOTENT must be 0 or 1" >&2; exit 2 ;; esac
+
+primary="$1"
+shift
+primary_args=("$@")
+attempt_bins=("$primary")
+if [[ -n "$FALLBACK_BINS" ]]; then
+  IFS=':' read -r -a raw_fallbacks <<<"$FALLBACK_BINS"
+  for fallback in ${raw_fallbacks[@]+"${raw_fallbacks[@]}"}; do
+    [[ -n "$fallback" ]] && attempt_bins+=("$fallback")
+  done
+fi
+
+run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+run_dir="$ARTIFACT_ROOT/$run_id"
+umask 077
+mkdir -p "$run_dir"
+ledger="$run_dir/attempts.tsv"
+printf 'attempt\tresult\texit_code\n' >"$ledger"
+
+temporary="$(mktemp -d "${TMPDIR:-/tmp}/frank-capacity.XXXXXX")"
+cleanup() { rm -rf "$temporary"; }
+trap cleanup EXIT
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+
+is_capacity() {
+  local stdout_file="$1" stderr_file="$2"
+  if [[ -n "$CLASSIFIER" ]]; then
+    "$CLASSIFIER" "$stdout_file" "$stderr_file"
+    return $?
+  fi
+  LC_ALL=C grep -Eiq '^[^A-Za-z0-9]*(selected )?model (is (currently )?)?(at capacity|overloaded)(\. please try a different model\.)?[[:space:]]*$|^[^A-Za-z0-9]*overloaded[_ -]?error[[:space:]]*$' "$stderr_file"
+}
+
+side_effect_state() {
+  local stdout_file="$1" stderr_file="$2" state
+  if [[ "$IDEMPOTENT" == "1" ]]; then
+    printf 'none\n'
+    return 0
+  fi
+  if [[ -z "$SIDE_EFFECT_PROBE" ]]; then
+    printf 'unknown\n'
+    return 0
+  fi
+  state="$("$SIDE_EFFECT_PROBE" "$stdout_file" "$stderr_file" 2>/dev/null || true)"
+  case "$state" in none|present|unknown) printf '%s\n' "$state" ;; *) printf 'unknown\n' ;; esac
+}
+
+attempt=0
+for executable in "${attempt_bins[@]}"; do
+  attempt=$((attempt + 1))
+  stdout_file="$temporary/stdout.$attempt"
+  stderr_file="$temporary/stderr.$attempt"
+  set +e
+  if [[ "${#primary_args[@]}" -eq 0 ]]; then
+    "$executable" >"$stdout_file" 2>"$stderr_file"
+  else
+    "$executable" "${primary_args[@]}" >"$stdout_file" 2>"$stderr_file"
+  fi
+  rc=$?
+  set -e
+
+  if [[ "$rc" -eq 0 ]]; then
+    cat "$stdout_file"
+    cat "$stderr_file" >&2
+    printf '%s\tsuccess\t0\n' "$attempt" >>"$ledger"
+    exit 0
+  fi
+  if ! is_capacity "$stdout_file" "$stderr_file"; then
+    cat "$stdout_file"
+    cat "$stderr_file" >&2
+    printf '%s\tnon_capacity_failure\t%s\n' "$attempt" "$rc" >>"$ledger"
+    exit "$rc"
+  fi
+
+  state="$(side_effect_state "$stdout_file" "$stderr_file")"
+  remaining=$(( ${#attempt_bins[@]} - attempt ))
+  if [[ "$state" == "present" || "$state" == "unknown" ]]; then
+    cat "$stdout_file"
+    cat "$stderr_file" >&2
+    printf '%s\tcapacity_replay_unsafe\t%s\n' "$attempt" "$rc" >>"$ledger"
+    echo "capacity replay refused: side_effect_state=$state" >&2
+    exit 74
+  fi
+
+  printf '%s\tcapacity\t%s\n' "$attempt" "$rc" >>"$ledger"
+  if [[ "$remaining" -gt 0 ]]; then
+    [[ "$BACKOFF" -eq 0 ]] || sleep "$BACKOFF"
+  fi
+done
+
+echo "capacity exhausted; artifact=$run_dir" >&2
+exit 75

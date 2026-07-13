@@ -4,5 +4,8 @@ if [[ "${CODEX_BRIDGE_DRY_RUN:-0}" == "1" ]]; then
   echo "codex bridge dry-run ok"
   exit 0
 fi
-echo "error: live Codex bridge is not bundled in v0.1" >&2
+if [[ -n "${CODEX_BRIDGE_BIN:-}" ]]; then
+  exec "$CODEX_BRIDGE_BIN" "$@"
+fi
+echo "error: live Codex bridge is not bundled; set CODEX_BRIDGE_BIN or enable dry-run" >&2
 exit 124

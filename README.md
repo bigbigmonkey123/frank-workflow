@@ -1,9 +1,11 @@
 # Frank Workflow
 
 [![ci](https://github.com/bigbigmonkey123/frank-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/bigbigmonkey123/frank-workflow/actions/workflows/ci.yml)
-[![release](https://img.shields.io/badge/release-v0.1.1-blue)](https://github.com/bigbigmonkey123/frank-workflow/releases/tag/v0.1.1)
+[![release](https://img.shields.io/badge/release-v0.2.0-blue)](https://github.com/bigbigmonkey123/frank-workflow/releases/tag/v0.2.0)
 
 Frank Workflow is a bridge-protocol-driven, multi-agent development workflow. It provides a Codex-oriented developer adapter, a Claude review adapter, and an optional Gemini/smux scout adapter, while keeping team- or user-specific behavior in overlays.
+
+v0.2 turns the reviewer dry-run into an executable artifact lifecycle, makes continuous execution and review invalidation explicit, and adds a vendor-neutral fail-closed capacity wrapper.
 
 ## Why
 
@@ -20,7 +22,9 @@ cd frank-workflow
 ./scripts/bootstrap.sh --project /tmp/frank-workflow-demo --name demo
 ```
 
-Expected dry-run output includes a deterministic task id and a sample verdict.
+Expected dry-run output includes a unique task id and a sample verdict.
+
+Dry-run task ids are unique by default. Parse `task_id=` from `send`; deterministic ids are available only through the test override documented in `docs/bridge-protocol.md`.
 
 ## Roles
 
@@ -42,6 +46,8 @@ Codex is an adapter, not a hard dependency. Any CLI can implement the bridge pro
 - `scripts/` — install, env check, render, secret scan, docs lint.
 - `tests/` — dry-run and static tests.
 
+Reviewer task artifacts are stored under the gitignored `.claude-bridge/<task-id>/` root. They may contain prompt text; use the bridge `cleanup` command when retention is unnecessary.
+
 ## Runtime Tools
 
 This repo does not vendor Claude/Codex/Gemini CLIs, Codex plugins, MCP services, smux/tmux helpers, credentials, browser profiles, or private overlays. Install those in the user environment and verify them with `./scripts/check-env.sh --live`. The default tests use dry-run adapters and require only `bash`, `git`, and `python3`. See `docs/runtime-environment.md`.
@@ -57,3 +63,12 @@ The default quick start uses dry-run adapters. For real Claude/Codex/Gemini exec
 ## Private Overlays
 
 Public core runs without overlays. Users may attach private overlays through `.frank-workflow/config.toml`, `FRANK_WORKFLOW_OVERLAY_DIR`, or CLI flags. Private overlays should stay outside public Git history.
+
+## Reliability Rules
+
+- Ordinary `REVISE`, test failures, and docs fixes continue automatically within the configured round budget.
+- Any tracked change invalidates the prior approval for that review scope.
+- Capacity/overload is not a user confirmation point.
+- Partial or unknown execution returns exit `74` and must be reconciled before replay; exit `75` is reserved for capacity exhaustion with replay safety proven `none`.
+
+See `docs/workflow.md`, `docs/review-gates.md`, `docs/bridge-protocol.md`, and `docs/capacity-resilience.md`.

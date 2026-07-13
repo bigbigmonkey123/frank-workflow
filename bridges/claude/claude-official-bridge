@@ -1,14 +1,47 @@
 #!/usr/bin/env bash
 set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/artifact-helpers.sh
+source "$ROOT/bridges/lib/artifact-helpers.sh"
+
 cmd="${1:-}"
 shift || true
+
+usage() {
+  cat <<'USAGE'
+Usage: claude-official-bridge <start|send|wait|read|status|stop|cleanup> [args]
+USAGE
+}
+
 if [[ "${CLAUDE_BRIDGE_DRY_RUN:-0}" == "1" ]]; then
+  ARTIFACT_ROOT="${FRANK_BRIDGE_ARTIFACT_ROOT:-$PWD/.claude-bridge}"
   case "$cmd" in
-    send)
-      echo "Task sent: task_id=dryrun-0001"
+    start|stop)
+      echo "claude bridge dry-run $cmd ok"
       ;;
-    wait)
-      cat <<'OUT'
+    send)
+      task_id="$(frank_generate_task_id)"
+      umask 077
+      frank_ensure_artifact_root "$ARTIFACT_ROOT"
+      task_dir="$ARTIFACT_ROOT/$task_id"
+      if ! mkdir "$task_dir" 2>/dev/null; then
+        echo "error: task already exists: $task_id" >&2
+        exit 1
+      fi
+      created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      prompt="${1:-}"
+      if [[ -f "$prompt" ]]; then
+        cat "$prompt" | frank_atomic_write "$task_dir/request.md"
+      else
+        printf '%s\n' "$prompt" | frank_atomic_write "$task_dir/request.md"
+      fi
+      {
+        printf 'TASK_ID=%s\n' "$task_id"
+        printf 'ROLE=reviewer\nMODE=dry-run\nCREATED_AT=%s\n' "$created_at"
+      } | frank_atomic_write "$task_dir/session.env"
+      frank_write_metadata "$task_dir/metadata.json" "$task_id" pending missing reviewer "$created_at"
+      if [[ "${FRANK_BRIDGE_DRY_RUN_DEFER_RESPONSE:-0}" != "1" ]]; then
+        cat <<'OUT' | frank_atomic_write "$task_dir/response.md"
 VERDICT: APPROVED_WITH_RISKS
 FINDINGS:
 - [dry-run] bridge protocol reachable
@@ -17,11 +50,76 @@ RECOMMENDATIONS:
 EVIDENCE:
 - dry-run fixture
 OUT
+        frank_write_metadata "$task_dir/metadata.json" "$task_id" done parsed reviewer "$created_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      fi
+      echo "Task sent: task_id=$task_id"
       ;;
-    status) echo "claude bridge dry-run ok" ;;
-    *) echo "error: unsupported dry-run command: $cmd" >&2; exit 1 ;;
+    wait)
+      task_id="${1:-}"
+      timeout="${2:-30}"
+      frank_validate_task_id "$task_id" || { echo "error: invalid task id" >&2; exit 1; }
+      [[ "$timeout" =~ ^[0-9]+$ ]] || { echo "error: timeout must be a non-negative integer" >&2; exit 1; }
+      task_dir="$ARTIFACT_ROOT/$task_id"
+      [[ -d "$task_dir" ]] || { echo "error: unknown task: $task_id" >&2; exit 1; }
+      elapsed=0
+      while [[ ! -f "$task_dir/response.md" ]]; do
+        [[ "$elapsed" -lt "$timeout" ]] || { echo "error: timeout waiting for $task_id" >&2; exit 2; }
+        sleep 1
+        elapsed=$((elapsed + 1))
+      done
+      grep -Eq '^VERDICT: (APPROVED|APPROVED_WITH_RISKS|REVISE)$' "$task_dir/response.md" || {
+        echo "error: invalid response artifact: $task_id" >&2
+        exit 1
+      }
+      cat "$task_dir/response.md"
+      ;;
+    read)
+      task_id="${1:-}"
+      frank_validate_task_id "$task_id" || { echo "error: invalid task id" >&2; exit 1; }
+      [[ -f "$ARTIFACT_ROOT/$task_id/response.md" ]] || { echo "error: response not found: $task_id" >&2; exit 1; }
+      cat "$ARTIFACT_ROOT/$task_id/response.md"
+      ;;
+    status)
+      if [[ ! -d "$ARTIFACT_ROOT" ]]; then
+        echo "claude bridge dry-run ok tasks=0"
+      else
+        count="$(find "$ARTIFACT_ROOT" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+        echo "claude bridge dry-run ok tasks=$count"
+      fi
+      ;;
+    cleanup)
+      target="${1:-}"
+      case "$target" in
+        --all)
+          [[ -f "$ARTIFACT_ROOT/.frank-bridge-root" ]] || { echo "error: unmanaged artifact root" >&2; exit 1; }
+          for task_dir in "$ARTIFACT_ROOT"/*; do
+            [[ -d "$task_dir" && -f "$task_dir/session.env" ]] || continue
+            grep -q '^MODE=dry-run$' "$task_dir/session.env" || continue
+            rm -rf "$task_dir"
+          done
+          if ! find "$ARTIFACT_ROOT" -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
+            rm -f "$ARTIFACT_ROOT/.frank-bridge-root"
+            rmdir "$ARTIFACT_ROOT" 2>/dev/null || true
+          fi
+          ;;
+        '') echo "error: cleanup requires a task id or --all" >&2; exit 1 ;;
+        *)
+          frank_validate_task_id "$target" || { echo "error: invalid task id" >&2; exit 1; }
+          [[ -d "$ARTIFACT_ROOT/$target" ]] || { echo "error: unknown task: $target" >&2; exit 1; }
+          grep -q '^MODE=dry-run$' "$ARTIFACT_ROOT/$target/session.env" 2>/dev/null || { echo "error: refusing cleanup of non-dry-run task: $target" >&2; exit 1; }
+          rm -rf "$ARTIFACT_ROOT/$target"
+          ;;
+      esac
+      echo "claude bridge dry-run cleanup ok"
+      ;;
+    -h|--help|'') usage ;;
+    *) echo "error: unsupported dry-run command: $cmd" >&2; usage >&2; exit 1 ;;
   esac
   exit 0
 fi
-echo "error: live Claude bridge is not bundled in v0.1; use CLAUDE_BRIDGE_DRY_RUN=1 or install a compatible adapter" >&2
+
+if [[ -n "${CLAUDE_BRIDGE_BIN:-}" ]]; then
+  exec "$CLAUDE_BRIDGE_BIN" "$cmd" "$@"
+fi
+echo "error: live Claude bridge is not bundled; set CLAUDE_BRIDGE_BIN or use CLAUDE_BRIDGE_DRY_RUN=1" >&2
 exit 124

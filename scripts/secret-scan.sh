@@ -9,6 +9,11 @@ scan() {
   grep -RInE "$pattern" \
     --exclude-dir=.git \
     --exclude-dir=.claude-bridge \
+    --exclude-dir=.codex-shared \
+    --exclude-dir=.codex-agent-shared \
+    --exclude-dir=.gemini-shared \
+    --exclude-dir=.frank-capacity-guard \
+    --exclude-dir=tmp \
     --exclude='.gitleaks.toml' \
     --exclude='secret-scan.sh' \
     . || true

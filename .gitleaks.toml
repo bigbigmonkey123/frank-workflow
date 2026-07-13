@@ -6,6 +6,11 @@ paths = [
   '''^\.gitleaks\.toml$''',
   '''^scripts/secret-scan\.sh$''',
   '''^\.claude-bridge/''',
+  '''^\.codex-shared/''',
+  '''^\.codex-agent-shared/''',
+  '''^\.gemini-shared/''',
+  '''^\.frank-capacity-guard/''',
+  '''^tmp/''',
   '''^\.git/'''
 ]
 

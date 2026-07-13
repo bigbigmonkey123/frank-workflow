@@ -51,6 +51,8 @@ CODEX_BRIDGE_DRY_RUN=1 bridges/codex/codex-bridge status
 GEMINI_BRIDGE_DRY_RUN=1 bridges/gemini/gemini-bridge status
 ```
 
+The v0.2 Claude dry-run is the lifecycle reference. A compatible live reviewer adapter should return a unique task id, archive request/response/metadata, keep `status` read-only, and bind approvals to an explicit review basis. See `docs/bridge-protocol.md`.
+
 
 ## 4. Configure MCP services outside the repo
 

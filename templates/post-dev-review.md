@@ -1,1 +1,1 @@
-Review the completed change. Read the diff and QA evidence. Return VERDICT, FINDINGS, RECOMMENDATIONS, and EVIDENCE.
+Review the completed change. Read the exact current diff and QA evidence, verify prior blocking findings are closed, and identify the review basis. Any later tracked change invalidates this verdict. Return VERDICT, FINDINGS, RECOMMENDATIONS, and EVIDENCE.
