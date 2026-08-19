@@ -14,7 +14,7 @@ Reusable bridge-protocol-driven workflow core for multi-agent software developme
 | Task | Read First |
 |---|---|
 | Workflow gates | `docs/workflow.md` |
-| One-page quickstart | `docs/frank-workflow-quickstart.md` |
+| One-page quickstart | `frank-workflow-quickstart.md` |
 | Bridge protocol | `docs/bridge-protocol.md` |
 | Capacity and safe retry | `docs/capacity-resilience.md` |
 | v0.2 migration | `docs/migration-v0.2.md` |

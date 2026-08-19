@@ -15,7 +15,7 @@ v0.2 turns the reviewer dry-run into an executable artifact lifecycle, makes con
 
 ## One-Page Quickstart
 
-For a single-file workflow spec you can drop into any project, see [`docs/frank-workflow-quickstart.md`](docs/frank-workflow-quickstart.md). It covers roles, paths, auto-proceed rules, hard stops, review gates, and deploy gates in one page.
+For a single-file workflow spec you can drop into any project, see [`frank-workflow-quickstart.md`](frank-workflow-quickstart.md). It covers roles, paths, auto-proceed rules, hard stops, review gates, and deploy gates in one page.
 
 ## Quick Start
 
