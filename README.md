@@ -13,6 +13,10 @@ v0.2 turns the reviewer dry-run into an executable artifact lifecycle, makes con
 - Make review gates reproducible through archived artifacts.
 - Let teams customize persona, memory, risk gates, and local tooling without forking the core workflow.
 
+## One-Page Quickstart
+
+For a single-file workflow spec you can drop into any project, see [`docs/frank-workflow-quickstart.md`](docs/frank-workflow-quickstart.md). It covers roles, paths, auto-proceed rules, hard stops, review gates, and deploy gates in one page.
+
 ## Quick Start
 
 ```bash
