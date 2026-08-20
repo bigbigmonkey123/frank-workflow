@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=artifact-helpers.sh
+source "$ROOT/bridges/lib/artifact-helpers.sh"
+
+RECEIPT_TIMEOUT=30
+CHECK_INTERVAL=60
+STALE_THRESHOLD=300
+
+usage() {
+  cat <<'USAGE'
+Usage: review-monitor <artifact-root> <task-id> [options]
+
+Options:
+  --receipt-timeout  N   Seconds to wait for first heartbeat (default 30)
+  --check-interval   N   Seconds between health checks (default 60)
+  --stale-threshold  N   Seconds of no heartbeat before declaring stale (default 300)
+
+Exit codes:
+  0   Review completed (response.md arrived)
+  2   Receipt timeout (reviewer never started)
+  3   Reviewer stale (heartbeat expired)
+USAGE
+}
+
+[[ $# -ge 2 ]] || { usage >&2; exit 1; }
+ARTIFACT_ROOT="$1"; shift
+TASK_ID="$1"; shift
+
+frank_validate_task_id "$TASK_ID" || { echo "error: invalid task id" >&2; exit 1; }
+TASK_DIR="$ARTIFACT_ROOT/$TASK_ID"
+[[ -d "$TASK_DIR" ]] || { echo "error: unknown task: $TASK_ID" >&2; exit 1; }
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --receipt-timeout)  RECEIPT_TIMEOUT="$2"; shift 2 ;;
+    --check-interval)   CHECK_INTERVAL="$2"; shift 2 ;;
+    --stale-threshold)  STALE_THRESHOLD="$2"; shift 2 ;;
+    *) echo "error: unknown option: $1" >&2; exit 1 ;;
+  esac
+done
+
+for val in "$RECEIPT_TIMEOUT" "$CHECK_INTERVAL" "$STALE_THRESHOLD"; do
+  [[ "$val" =~ ^[0-9]+$ ]] || { echo "error: options must be non-negative integers" >&2; exit 1; }
+done
+
+has_response() {
+  [[ -f "$TASK_DIR/response.md" ]] && grep -Eq '^VERDICT: (APPROVED|APPROVED_WITH_RISKS|REVISE)$' "$TASK_DIR/response.md" 2>/dev/null
+}
+
+# Phase 1: Receipt confirmation
+elapsed=0
+while [[ ! -f "$TASK_DIR/heartbeat" ]]; do
+  has_response && { echo "monitor: review completed task=$TASK_ID"; exit 0; }
+  if [[ "$elapsed" -ge "$RECEIPT_TIMEOUT" ]]; then
+    echo "error: receipt timeout — no heartbeat after ${RECEIPT_TIMEOUT}s task=$TASK_ID" >&2
+    exit 2
+  fi
+  sleep 1
+  elapsed=$((elapsed + 1))
+done
+echo "monitor: receipt confirmed task=$TASK_ID"
+
+# Phase 2: Monitor loop
+while true; do
+  has_response && { echo "monitor: review completed task=$TASK_ID"; exit 0; }
+
+  age="$(frank_check_heartbeat "$TASK_DIR")"
+  if [[ "$age" -ge "$STALE_THRESHOLD" ]]; then
+    echo "error: reviewer stale — heartbeat age=${age}s threshold=${STALE_THRESHOLD}s task=$TASK_ID" >&2
+    exit 3
+  fi
+
+  sleep "$CHECK_INTERVAL"
+done

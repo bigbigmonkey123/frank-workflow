@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-bash -n bridges/claude/claude-official-bridge bridges/claude/claude-entrypoint-probe.sh bridges/codex/codex-bridge bridges/gemini/gemini-bridge bridges/lib/*.sh bridges/lib/capacity-guard scripts/*.sh tests/*.sh
+bash -n bridges/claude/claude-official-bridge bridges/claude/claude-entrypoint-probe.sh bridges/codex/codex-bridge bridges/gemini/gemini-bridge bridges/lib/*.sh bridges/lib/capacity-guard bridges/lib/review-monitor scripts/*.sh tests/*.sh
 ./scripts/check-env.sh
 ./tests/bridge-marker-test.sh
 ./tests/bridge-lifecycle-test.sh
@@ -9,6 +9,7 @@ bash -n bridges/claude/claude-official-bridge bridges/claude/claude-entrypoint-p
 ./tests/secret-scan-test.sh
 ./tests/docs-lint-test.sh
 ./tests/bootstrap-test.sh
+./tests/review-monitor-test.sh
 smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/frank-run-smoke.XXXXXX")"
 trap 'rm -rf "$smoke_root"' EXIT
 CLAUDE_BRIDGE_DRY_RUN=1 FRANK_BRIDGE_ARTIFACT_ROOT="$smoke_root/artifacts" FRANK_BRIDGE_DRY_RUN_TASK_ID=run-suite-smoke bridges/claude/claude-official-bridge send templates/review-request.md | grep -q 'run-suite-smoke'

@@ -75,6 +75,40 @@ Reviewer 必须独立于 Developer；实现者不能做最终 review；Developer
 
 **自动 Revision**：`REVISE` 在轮次预算内自动回到实现→re-review，不是暂停点。默认预算：设计/final gate 2 轮，重实现 3 轮。
 
+## Review Monitoring Protocol
+
+每次 review 提交后，发起方必须全程监控 reviewer 状态，禁止 send 后不管。
+
+### 三阶段监控
+
+1. **确认收到**：`send` 后 30 秒内必须观察到 reviewer heartbeat，否则判定未收到（exit 2）
+2. **持续监控**：等待期间每 60 秒检查 heartbeat 新鲜度
+3. **卡死判定**：heartbeat 超过 5 分钟未更新 → 判定进程卡死（exit 3）
+
+### 恢复策略
+
+卡死发生时按顺序执行：
+1. 终止当前 reviewer 进程
+2. 降级到备用 reviewer（Codex → Grok → Claude）
+3. 备用仍失败 → 上报 Human
+
+### Agent 职责
+
+- 发起 review 时必须启动 `review-monitor` 或等效监控
+- 每次 review 结束记录：task_id、耗时、轮次、是否触发重试
+- `bridge health <task-id>` 可随时查询单个 review 状态
+
+### 工具
+
+```bash
+# 监控脚本（阻塞直到完成或异常）
+review-monitor <artifact-root> <task-id> [--receipt-timeout 30] [--check-interval 60] [--stale-threshold 300]
+
+# 即时状态查询
+bridge health <task-id>
+# 返回: alive|stale|dead|done + age + last_heartbeat
+```
+
 ## Deploy Gate
 
 Prod 部署属于 Hard Stop，必须满足：

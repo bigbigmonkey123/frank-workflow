@@ -46,6 +46,28 @@ frank_atomic_write() {
   mv "$temporary" "$destination"
 }
 
+frank_write_heartbeat() {
+  local task_dir="$1"
+  date -u +%Y-%m-%dT%H:%M:%SZ | frank_atomic_write "$task_dir/heartbeat"
+}
+
+# Returns heartbeat age in seconds; -1 if no heartbeat file exists.
+# Relies on local date(1) monotonicity — no cross-host clock sync assumed.
+frank_check_heartbeat() {
+  local task_dir="$1"
+  local hb_file="$task_dir/heartbeat"
+  [[ -f "$hb_file" ]] || { echo "-1"; return 0; }
+  local hb_ts now_ts
+  hb_ts="$(cat "$hb_file")"
+  if date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$hb_ts" +%s >/dev/null 2>&1; then
+    hb_ts="$(date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$hb_ts" +%s)"
+  else
+    hb_ts="$(date -d "$hb_ts" +%s 2>/dev/null || echo 0)"
+  fi
+  now_ts="$(date -u +%s)"
+  echo $(( now_ts - hb_ts ))
+}
+
 frank_write_metadata() {
   local destination="$1" task_id="$2" status="$3" response_status="$4"
   local role="$5" created_at="$6" finished_at="${7:-}"

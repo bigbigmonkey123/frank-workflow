@@ -9,6 +9,7 @@ bridge start
 bridge send <prompt-or-file>        # prints Task sent: task_id=<id>
 bridge wait <task-id> [timeout]
 bridge read <task-id>
+bridge health <task-id>              # heartbeat-based status check
 bridge status                       # must not create artifacts
 bridge stop
 bridge cleanup <task-id|--all>
@@ -38,6 +39,21 @@ The reviewer reference adapter writes:
 - `status` is read-only.
 
 Live adapters should archive equivalent evidence even if their runtime root differs.
+
+## Heartbeat Contract
+
+Reviewers write a `heartbeat` file in the task directory immediately upon receiving a request and update it every 30 seconds. The file contains a single ISO 8601 UTC timestamp written via `frank_atomic_write` to prevent partial reads.
+
+The `health` command reads the heartbeat and returns a single machine-parsable line:
+
+```text
+alive age=45s last_heartbeat=12s    # reviewer is active
+stale age=320s last_heartbeat=310s  # heartbeat expired (default threshold: 300s)
+dead  age=600s no_heartbeat         # no heartbeat ever written
+done  age=180s                      # response.md present with valid verdict
+```
+
+The companion `review-monitor` script automates three-phase monitoring: receipt confirmation (heartbeat appears within 30s), periodic health checks (every 60s), and stale detection (heartbeat age exceeds threshold). See `docs/review-monitoring.md`.
 
 ## Verdict Contract
 

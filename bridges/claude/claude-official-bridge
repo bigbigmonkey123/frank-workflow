@@ -40,6 +40,7 @@ if [[ "${CLAUDE_BRIDGE_DRY_RUN:-0}" == "1" ]]; then
         printf 'ROLE=reviewer\nMODE=dry-run\nCREATED_AT=%s\n' "$created_at"
       } | frank_atomic_write "$task_dir/session.env"
       frank_write_metadata "$task_dir/metadata.json" "$task_id" pending missing reviewer "$created_at"
+      frank_write_heartbeat "$task_dir"
       if [[ "${FRANK_BRIDGE_DRY_RUN_DEFER_RESPONSE:-0}" != "1" ]]; then
         cat <<'OUT' | frank_atomic_write "$task_dir/response.md"
 VERDICT: APPROVED_WITH_RISKS
@@ -111,6 +112,36 @@ OUT
           ;;
       esac
       echo "claude bridge dry-run cleanup ok"
+      ;;
+    health)
+      task_id="${1:-}"
+      frank_validate_task_id "$task_id" || { echo "error: invalid task id" >&2; exit 1; }
+      task_dir="$ARTIFACT_ROOT/$task_id"
+      [[ -d "$task_dir" ]] || { echo "error: unknown task: $task_id" >&2; exit 1; }
+      if [[ -f "$task_dir/response.md" ]] && grep -Eq '^VERDICT: (APPROVED|APPROVED_WITH_RISKS|REVISE)$' "$task_dir/response.md" 2>/dev/null; then
+        created="$(grep '^CREATED_AT=' "$task_dir/session.env" 2>/dev/null | cut -d= -f2)"
+        if date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$created" +%s >/dev/null 2>&1; then
+          age=$(( $(date -u +%s) - $(date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$created" +%s) ))
+        else
+          age=$(( $(date -u +%s) - $(date -d "$created" +%s 2>/dev/null || echo 0) ))
+        fi
+        echo "done age=${age}s"
+      else
+        hb_age="$(frank_check_heartbeat "$task_dir")"
+        created="$(grep '^CREATED_AT=' "$task_dir/session.env" 2>/dev/null | cut -d= -f2)"
+        if date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$created" +%s >/dev/null 2>&1; then
+          task_age=$(( $(date -u +%s) - $(date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$created" +%s) ))
+        else
+          task_age=$(( $(date -u +%s) - $(date -d "$created" +%s 2>/dev/null || echo 0) ))
+        fi
+        if [[ "$hb_age" -eq -1 ]]; then
+          echo "dead age=${task_age}s no_heartbeat"
+        elif [[ "$hb_age" -le 300 ]]; then
+          echo "alive age=${task_age}s last_heartbeat=${hb_age}s"
+        else
+          echo "stale age=${task_age}s last_heartbeat=${hb_age}s"
+        fi
+      fi
       ;;
     -h|--help|'') usage ;;
     *) echo "error: unsupported dry-run command: $cmd" >&2; usage >&2; exit 1 ;;
