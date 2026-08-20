@@ -109,6 +109,37 @@ bridge health <task-id>
 # 返回: alive|stale|dead|done + age + last_heartbeat
 ```
 
+## Document-Anchored Development (DAD)
+
+长对话中 context 会被压缩（compact），agent 逐步遗忘原始目标。DAD 以一个"活设计文档"贯穿全流程，作为跨 agent、跨 compact 的持久真相源。
+
+### 核心规则
+
+1. **开工前**：创建设计文档（`templates/design-doc.md`），定义目标、边界、方案方向
+2. **每步完成后**：更新文档——标记已完成、记录发现的问题、修正方向
+3. **每步开始前**：重读文档，确认当前步骤仍与目标对齐
+4. **跨 agent handoff**：设计文档路径必须传递，接手 agent 先读文档再开工
+5. **context compact 后**：首要动作是重读设计文档
+
+### 适用场景
+
+- Full Gated Path 中超过 3 步的实现（强烈建议）
+- 跨多个 agent 的协作任务
+- 预计对话超长（容易被 compact）的任务
+- Compact Path 不强制，但鼓励
+
+### 文档路径
+
+```
+/tmp/<project>-design/design-doc.md
+```
+
+### Anti-drift 规则
+
+- Agent 每步开始前必须引用设计文档中的当前目标
+- 如果发现工作与文档目标不一致：先修正工作方向，或更新文档目标（附理由）
+- context compact 后，agent 首要动作是重读设计文档，不允许凭记忆继续
+
 ## Deploy Gate
 
 Prod 部署属于 Hard Stop，必须满足：

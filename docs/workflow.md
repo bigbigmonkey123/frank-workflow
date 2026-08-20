@@ -17,7 +17,7 @@ Research -> Design packet -> Pre-dev review -> Implement -> QA
   -> Post-dev review -> Commit/PR -> Optional deploy gate -> Closeout
 ```
 
-Use the full path for schema/migration, auth, payments, deployment, cross-service contracts, concurrency, retries, caches, or other medium/high-risk work.
+Use the full path for schema/migration, auth, payments, deployment, cross-service contracts, concurrency, retries, caches, or other medium/high-risk work. For paths exceeding three implementation steps, use Document-Anchored Development (DAD) to prevent goal drift. See `docs/document-anchored-development.md`.
 
 ## Continuous Execution
 
