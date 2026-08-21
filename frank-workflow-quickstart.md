@@ -34,11 +34,14 @@ Reviewer 必须独立于 Developer；实现者不能做最终 review；Developer
 ### Full Gated Path（中高风险）
 
 ```
-调研 → 设计方案 → Pre-dev review → [FTW] → 实现
-  → Commit/MR → Post-dev review → QA approve/merge → 部署 gate → 收尾
+调研 → 设计方案 [→ 创建设计文档] → Pre-dev review → [FTW]
+  → 实现 [→ 每步完成后更新文档；下一步开始前重读文档]
+  → Commit/MR → Post-dev review（附设计文档作为对齐证据） → QA approve/merge → 部署 gate → 收尾
 ```
 
 适用：DB schema/migration、auth、支付、部署、跨服务契约、并发、重试、缓存、多文件联动、影响线上行为。
+
+超过 3 步的实现必须使用 DAD（见下方 Document-Anchored Development 章节），设计文档贯穿全流程。
 
 ### 例外路径
 

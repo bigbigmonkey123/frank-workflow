@@ -16,6 +16,8 @@ Reusable bridge-protocol-driven workflow core for multi-agent software developme
 | Workflow gates | `docs/workflow.md` |
 | One-page quickstart | `frank-workflow-quickstart.md` |
 | Bridge protocol | `docs/bridge-protocol.md` |
+| Document-Anchored Development | `docs/document-anchored-development.md` |
+| Review monitoring | `docs/review-monitoring.md` |
 | Capacity and safe retry | `docs/capacity-resilience.md` |
 | v0.2 migration | `docs/migration-v0.2.md` |
 | Runtime environment | `docs/runtime-environment.md` |

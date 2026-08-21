@@ -13,11 +13,25 @@ Inspect -> Minimal change -> Local QA -> Independent review -> Report
 ## Full Gated Path
 
 ```text
-Research -> Design packet -> Pre-dev review -> Implement -> QA
-  -> Post-dev review -> Commit/PR -> Optional deploy gate -> Closeout
+Research -> Design packet [-> create design doc] -> Pre-dev review -> Implement
+  [-> update design doc after each step; re-read before next step]
+  -> QA -> Post-dev review -> Commit/PR -> Optional deploy gate -> Closeout
 ```
 
-Use the full path for schema/migration, auth, payments, deployment, cross-service contracts, concurrency, retries, caches, or other medium/high-risk work. For paths exceeding three implementation steps, use Document-Anchored Development (DAD) to prevent goal drift. See `docs/document-anchored-development.md`.
+Use the full path for schema/migration, auth, payments, deployment, cross-service contracts, concurrency, retries, caches, or other medium/high-risk work.
+
+### Document-Anchored Development (DAD)
+
+For paths exceeding three implementation steps, a living design document is **required** throughout execution. See `docs/document-anchored-development.md` for full rules.
+
+Integrated steps:
+
+1. **Design packet stage**: create `/tmp/<project>-design/design-doc.md` from `templates/design-doc.md` with goals, boundaries, and approach
+2. **Before each implementation step**: re-read the design doc; confirm the step aligns with goals
+3. **After each implementation step**: update the doc — mark completed, record findings, correct direction if needed
+4. **On agent handoff**: pass the document path; receiving agent reads before working
+5. **After context compact**: first action is re-reading the design doc, not working from memory
+6. **Post-dev review**: include the design doc as evidence of goal alignment
 
 ## Continuous Execution
 
@@ -51,8 +65,9 @@ Exit `74` does not ask the human to approve an infrastructure error. It requires
 ## Multi-agent Path
 
 ```text
-Scout -> Split independent tasks -> Developer workers -> Independent reviewer
-  -> Fix -> Lead merge -> QA -> Final review
+Scout -> Split independent tasks [-> pass design doc path to each worker]
+  -> Developer workers [-> re-read design doc before starting; update after each milestone]
+  -> Independent reviewer -> Fix -> Lead merge -> QA -> Final review
 ```
 
-Advisory agents do not approve code. The implementation author cannot be the final reviewer.
+Advisory agents do not approve code. The implementation author cannot be the final reviewer. On every agent handoff, the design document path must be passed; the receiving agent reads it before working.
