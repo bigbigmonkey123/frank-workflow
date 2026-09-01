@@ -5,7 +5,7 @@ Reusable bridge-protocol-driven workflow core for multi-agent software developme
 ## Golden Rules
 
 - Public core must remain free of private paths, real production domains, real IP addresses, credentials, and customer context.
-- Codex, Claude, and Gemini are adapters; the stable contract is the bridge protocol.
+- Codex, Claude, Gemini, and Grok are adapters; the stable contract is the bridge protocol.
 - Use evidence-first development: inspect, decide, implement, verify, review, report.
 - Keep overlays explicit and local; do not import private overlays by default.
 

@@ -11,6 +11,9 @@ command = "claude-official-bridge"
 [adapters.scout]
 command = "gemini-bridge"
 
+[adapters.grok]
+command = "grok-bridge"
+
 # Illustrative overlay policy; the public bootstrap does not enforce these keys.
 [workflow]
 design_review_rounds = 2

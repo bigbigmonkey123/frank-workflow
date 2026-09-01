@@ -26,14 +26,14 @@ done
 
 if [[ "$LIVE" == "1" ]]; then
   echo "Live adapter checks"
-  for c in claude codex gemini tmux tmux-bridge gitleaks shellcheck; do
+  for c in claude codex gemini grok tmux tmux-bridge gitleaks shellcheck; do
     if command -v "$c" >/dev/null 2>&1; then
       echo "OK optional: $c ($(command -v "$c"))"
     else
       echo "WARN optional missing: $c"
     fi
   done
-  for var in CLAUDE_BRIDGE_BIN CODEX_BRIDGE_BIN GEMINI_BRIDGE_BIN TMUX_BIN TMUX_BRIDGE_BIN; do
+  for var in CLAUDE_BRIDGE_BIN CODEX_BRIDGE_BIN GEMINI_BRIDGE_BIN GROK_BRIDGE_BIN TMUX_BIN TMUX_BRIDGE_BIN; do
     if [[ -n "${!var:-}" ]]; then
       echo "OK env override: $var=${!var}"
     fi

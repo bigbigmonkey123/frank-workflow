@@ -18,6 +18,7 @@ Optional:
 | Tool | Purpose |
 |---|---|
 | Gemini CLI or compatible scout | Scout role. |
+| Grok CLI or compatible reviewer | Reviewer fallback role. |
 | `gitleaks` | Local secret scan before publishing. |
 | `shellcheck` | Shell linting. |
 | MCP servers | Optional tool/context providers configured in your AI CLI environment. |
@@ -40,6 +41,7 @@ Use environment variables when your live adapter is not on `PATH`:
 export CLAUDE_BRIDGE_BIN="$HOME/.local/bin/claude-official-bridge"
 export CODEX_BRIDGE_BIN="$HOME/.local/bin/codex-bridge"
 export GEMINI_BRIDGE_BIN="$HOME/.local/bin/gemini-bridge"
+export GROK_BRIDGE_BIN="$HOME/.local/bin/grok-bridge"
 export TMUX_BRIDGE_BIN="$HOME/.local/bin/tmux-bridge"
 ```
 
@@ -49,6 +51,7 @@ The public dry-run adapters remain useful for tests:
 CLAUDE_BRIDGE_DRY_RUN=1 bridges/claude/claude-official-bridge send templates/review-request.md
 CODEX_BRIDGE_DRY_RUN=1 bridges/codex/codex-bridge status
 GEMINI_BRIDGE_DRY_RUN=1 bridges/gemini/gemini-bridge status
+GROK_BRIDGE_DRY_RUN=1 bridges/grok/grok-bridge send templates/review-request.md
 ```
 
 The v0.2 Claude dry-run is the lifecycle reference. A compatible live reviewer adapter should return a unique task id, archive request/response/metadata, keep `status` read-only, and bind approvals to an explicit review basis. See `docs/bridge-protocol.md`.

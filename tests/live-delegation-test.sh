@@ -15,5 +15,6 @@ chmod +x "$TMPROOT/external"
 CLAUDE_BRIDGE_BIN="$TMPROOT/external" "$ROOT/bridges/claude/claude-official-bridge" status detail | grep -q '^delegated:status detail$'
 CODEX_BRIDGE_BIN="$TMPROOT/external" "$ROOT/bridges/codex/codex-bridge" status detail | grep -q '^delegated:status detail$'
 GEMINI_BRIDGE_BIN="$TMPROOT/external" "$ROOT/bridges/gemini/gemini-bridge" status detail | grep -q '^delegated:status detail$'
+GROK_BRIDGE_BIN="$TMPROOT/external" "$ROOT/bridges/grok/grok-bridge" status detail | grep -q '^delegated:status detail$'
 
 echo "live delegation test passed"
