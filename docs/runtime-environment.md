@@ -80,3 +80,7 @@ Plugins and MCP services are environment requirements, not repository content:
 - Document plugin or MCP server names and minimum versions when a workflow needs them.
 - Do not copy plugin source, plugin cache, MCP server source, MCP config files, browser profiles, auth stores, or generated runtime state into this repo.
 - CI must pass without live plugins or MCP services by using dry-run adapters.
+
+## Codex Review Troubleshooting
+
+For skill-name discovery failures, document-review routing, and explicit model/effort enforcement, see [Codex Review Troubleshooting](codex-review-troubleshooting.md). This is operational guidance; personal skills and review artifacts remain in the user environment.
